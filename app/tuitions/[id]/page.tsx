@@ -225,7 +225,7 @@ export default async function TuitionDetailsPage({ params }: PageProps) {
                         <p className="text-xs text-muted-foreground">
                           {detail.label}
                         </p>
-                        <p className="mt-1 break-words text-sm font-semibold">
+                        <p className="mt-1 break-word text-sm font-semibold">
                           {detail.value}
                         </p>
                       </div>
