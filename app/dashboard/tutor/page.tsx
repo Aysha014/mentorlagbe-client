@@ -33,42 +33,66 @@ export default function TutorDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const jwt = await token();
+        setError("");
 
-        const response = await fetch(
-          `${API_URL}/tutor/dashboard`,
-          {
-            headers: {
-              Authorization: `Bearer ${jwt}`,
-            },
-          }
-        );
+        if (!API_URL) {
+          throw new Error("API URL is not configured.");
+        }
 
-      const contentType = response.headers.get("content-type");
+        // Get JWT from Better Auth
+        const { data: tokenData, error: tokenError } = await token();
 
-if (!contentType?.includes("application/json")) {
-  throw new Error(
-    "Server returned an invalid response. Check whether the backend is running and the API URL is correct."
-  );
-}
+        if (tokenError || !tokenData?.token) {
+          throw new Error(
+            "Authentication token not found. Please sign in again."
+          );
+        }
 
-const data = await response.json();
+        const jwt = tokenData.token;
+
+        // Fetch tutor dashboard statistics
+        const response = await fetch(`${API_URL}/tutor/dashboard`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+            "Content-Type": "application/json",
+          },
+          cache: "no-store",
+        });
+
+        const contentType = response.headers.get("content-type");
+
+        if (!contentType?.includes("application/json")) {
+          throw new Error(
+            "Server returned an invalid response. Check the backend API."
+          );
+        }
+
+        const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Failed to load dashboard");
+          throw new Error(
+            result.message || "Failed to load tutor dashboard."
+          );
+        }
+
+        if (!result.success) {
+          throw new Error(
+            result.message || "Unable to retrieve dashboard statistics."
+          );
         }
 
         setStats({
-          totalTuitions: data.data?.totalTuitions ?? 0,
-          activeTuitions: data.data?.activeTuitions ?? 0,
-          totalApplicants: data.data?.totalApplicants ?? 0,
-          currentPlan: data.data?.currentPlan ?? "Free",
+          totalTuitions: result.data?.totalTuitions ?? 0,
+          activeTuitions: result.data?.activeTuitions ?? 0,
+          totalApplicants: result.data?.totalApplicants ?? 0,
+          currentPlan: result.data?.currentPlan ?? "Free",
         });
       } catch (err) {
         setError(
           err instanceof Error
             ? err.message
-            : "Something went wrong"
+            : "Something went wrong."
         );
       } finally {
         setLoading(false);
@@ -107,9 +131,11 @@ const data = await response.json();
         <p className="text-sm font-medium text-teal-700">
           Tutor Dashboard
         </p>
+
         <h1 className="mt-2 text-2xl font-bold text-slate-900 sm:text-3xl">
           Welcome to your dashboard
         </h1>
+
         <p className="mt-2 text-sm text-slate-500">
           Manage your tuition posts and track your applicants.
         </p>
@@ -130,10 +156,11 @@ const data = await response.json();
               key={card.label}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-sm text-slate-500">
                   {card.label}
                 </p>
+
                 <div className="rounded-xl bg-teal-50 p-3 text-teal-700">
                   <Icon size={21} />
                 </div>
