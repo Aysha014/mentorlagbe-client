@@ -34,7 +34,7 @@ const menus = {
     { label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
     { label: "Manage Tuitions", href: "/dashboard/admin/tuitions", icon: BookOpen },
     { label: "Users", href: "/dashboard/admin/users", icon: Users },
-    { label: "Payments", href: "/dashboard/admin/payments", icon: CreditCard },
+    { label: "Transactions", href: "/dashboard/admin/transactions", icon: CreditCard },
   ],
 };
 
