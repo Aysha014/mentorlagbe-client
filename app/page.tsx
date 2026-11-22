@@ -150,7 +150,7 @@ export default function Home() {
               <img
                 src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1000"
                 alt="Students studying together"
-                className="h-64 w-full rounded-2xl object-cover sm:h-[380px] lg:h-[430px]"
+                className="h-64 w-full rounded-2xl object-cover sm:h-95 lg:h-107.5"
               />
             </div>
 
@@ -245,7 +245,7 @@ export default function Home() {
                   </span>
                 </div>
 
-                <h3 className="mt-5 break-words text-lg font-bold sm:text-xl">
+                <h3 className="mt-5 wrap-break-words text-lg font-bold sm:text-xl">
                   {tuition.title}
                 </h3>
 
@@ -366,7 +366,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:gap-5">
             <div className="flex min-w-0 flex-col rounded-2xl bg-primary p-5 text-primary-foreground sm:p-6 lg:p-7">
               <Users className="size-8 shrink-0 sm:size-9" />
-              <h3 className="mt-4 break-words text-2xl font-bold sm:mt-5 sm:text-3xl">
+              <h3 className="mt-4 wrap-break-word text-2xl font-bold sm:mt-5 sm:text-3xl">
                 Students
               </h3>
               <p className="mt-2 text-sm leading-6 text-primary-foreground/80">
