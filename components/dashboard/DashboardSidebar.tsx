@@ -25,10 +25,11 @@ const menus = {
     { label: "My Plan", href: "/pricing", icon: CreditCard },
   ],
   tutor: [
-    { label: "Overview", href: "/dashboard/tutor", icon: LayoutDashboard },
-    { label: "My Tuitions", href: "/dashboard/tutor/my-tuitions", icon: BookOpen },
-    { label: "Post Tuition", href: "/dashboard/tutor/post-tuition", icon: FileText },
-  ],
+  { label: "Overview", href: "/dashboard/tutor", icon: LayoutDashboard },
+  { label: "My Tuitions", href: "/dashboard/tutor/my-tuitions", icon: BookOpen },
+  { label: "Post Tuition", href: "/dashboard/tutor/post-tuition", icon: FileText },
+  { label: "Applicants", href: "/dashboard/tutor/applicants", icon: Users },
+],
   admin: [
     { label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
     { label: "Manage Tuitions", href: "/dashboard/admin/tuitions", icon: BookOpen },
