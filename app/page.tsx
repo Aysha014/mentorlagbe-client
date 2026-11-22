@@ -8,50 +8,31 @@ import {
   GraduationCap,
   Monitor,
   Users,
-  MapPin,
-  Clock,
+  Wallet,
+  UserRound,
   CheckCircle2,
   Search,
 } from "lucide-react";
+
+interface Tuition {
+  id: string;
+  title: string;
+  subject: string;
+  classLevel: string;
+  mode: string;
+  salary?: number;
+  monthlyFee?: number;
+  tutorName?: string;
+}
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const subjects = [
   { name: "Mathematics", icon: Calculator },
   { name: "English", icon: BookOpen },
   { name: "Science", icon: FlaskConical },
   { name: "ICT", icon: Monitor },
-];
-
-const tuitions = [
-  {
-    id: 1,
-    subject: "Mathematics",
-    title: "Mathematics Tutor for Class 9",
-    level: "Class 9",
-    mode: "Online",
-    fee: "৳5,000",
-    location: "Dhaka",
-    days: "4 days/week",
-  },
-  {
-    id: 2,
-    subject: "English",
-    title: "English Tutor for HSC Student",
-    level: "HSC",
-    mode: "Offline",
-    fee: "৳6,000",
-    location: "Uttara, Dhaka",
-    days: "5 days/week",
-  },
-  {
-    id: 3,
-    subject: "Physics",
-    title: "Physics Tutor for Class 10",
-    level: "Class 10",
-    mode: "Online",
-    fee: "৳4,500",
-    location: "Dhaka",
-    days: "3 days/week",
-  },
 ];
 
 const steps = [
@@ -85,7 +66,26 @@ const benefits = [
   "Student and tutor dashboards",
 ];
 
-export default function Home() {
+export default async function Home() {
+  let tuitions: Tuition[] = [];
+
+  try {
+    const response = await fetch(
+      `${API_URL}/tuitions?page=1&limit=6`,
+      { cache: "no-store" }
+    );
+
+    if (response.ok) {
+      const result = await response.json();
+
+      if (result.success && Array.isArray(result.data)) {
+        tuitions = result.data;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to fetch latest tuitions:", error);
+  }
+
   return (
     <main className="w-full overflow-x-hidden">
       {/* Hero */}
@@ -176,7 +176,9 @@ export default function Home() {
       {/* Popular Subjects */}
       <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
         <div className="text-center">
-          <p className="text-sm font-semibold text-primary">Explore Subjects</p>
+          <p className="text-sm font-semibold text-primary">
+            Explore Subjects
+          </p>
           <h2 className="mt-2 text-2xl font-bold sm:text-4xl">
             Learn What You Love
           </h2>
@@ -231,58 +233,68 @@ export default function Home() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-4 sm:mt-10 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-            {tuitions.map((tuition) => (
-              <article
-                key={tuition.id}
-                className="flex min-w-0 flex-col rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:shadow-lg sm:p-6"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                    {tuition.subject}
-                  </span>
-                  <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
-                    {tuition.mode}
-                  </span>
-                </div>
+            {tuitions.length > 0 ? (
+              tuitions.map((tuition) => (
+                <article
+                  key={tuition.id}
+                  className="flex h-full min-w-0 flex-col rounded-2xl border bg-card p-5 transition hover:-translate-y-1 hover:shadow-lg sm:p-6"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                      {tuition.subject}
+                    </span>
 
-                <h3 className="mt-5 wrap-break-words text-lg font-bold sm:text-xl">
-                  {tuition.title}
-                </h3>
+                    <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
+                      {tuition.mode}
+                    </span>
+                  </div>
 
-                <div className="mt-5 flex-1 space-y-3 text-sm text-muted-foreground">
-                  <p className="flex items-start gap-2">
-                    <GraduationCap className="mt-0.5 size-4 shrink-0" />
-                    <span>{tuition.level}</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <MapPin className="mt-0.5 size-4 shrink-0" />
-                    <span>{tuition.location}</span>
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <Clock className="mt-0.5 size-4 shrink-0" />
-                    <span>{tuition.days}</span>
-                  </p>
-                </div>
+                  <h3 className="mt-5 min-h-14 wrap-break-words text-lg font-bold sm:text-xl">
+                    {tuition.title}
+                  </h3>
 
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-5">
-                  <div>
-                    <p className="text-xs text-muted-foreground">
-                      Monthly fee
+                  <div className="mt-5 flex-1 space-y-4 text-sm text-muted-foreground">
+                    <p className="flex items-center gap-2">
+                      <GraduationCap className="size-4 shrink-0" />
+                      <span>{tuition.classLevel}</span>
                     </p>
-                    <p className="text-lg font-bold text-primary sm:text-xl">
-                      {tuition.fee}
+
+                    <p className="flex items-center gap-2">
+                      <UserRound className="size-4 shrink-0" />
+                      <span>{tuition.tutorName || "Not specified"}</span>
+                    </p>
+
+                    <p className="flex items-center gap-2">
+                      <Wallet className="size-4 shrink-0" />
+                      <span>
+                        Monthly Fee: ৳
+                        {(tuition.salary ?? tuition.monthlyFee ?? 0).toLocaleString("en-BD")}
+                      </span>
                     </p>
                   </div>
 
-                  <Link
-                    href={`/tuitions/${tuition.id}`}
-                    className="rounded-lg border px-3 py-2 text-xs font-semibold transition hover:bg-muted sm:px-4 sm:text-sm"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </article>
-            ))}
+                  <div className="mt-6 border-t pt-5">
+                    <Link
+                      href={`/tuitions/${tuition.id}`}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                    >
+                      View Details
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="col-span-full rounded-2xl border bg-card p-10 text-center">
+                <BookOpen className="mx-auto size-10 text-muted-foreground" />
+                <h3 className="mt-4 text-lg font-bold">
+                  No Tuitions Available
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  New tuition opportunities will appear here.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -366,7 +378,7 @@ export default function Home() {
           <div className="grid grid-cols-1 gap-4 min-[420px]:grid-cols-2 sm:gap-5">
             <div className="flex min-w-0 flex-col rounded-2xl bg-primary p-5 text-primary-foreground sm:p-6 lg:p-7">
               <Users className="size-8 shrink-0 sm:size-9" />
-              <h3 className="mt-4 wrap-break-word text-2xl font-bold sm:mt-5 sm:text-3xl">
+              <h3 className="mt-4 break-words text-2xl font-bold sm:mt-5 sm:text-3xl">
                 Students
               </h3>
               <p className="mt-2 text-sm leading-6 text-primary-foreground/80">
