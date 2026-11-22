@@ -16,6 +16,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function StudentBillingPage() {
   const [currentPlan, setCurrentPlan] = useState("Free");
   const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -53,6 +54,43 @@ export default function StudentBillingPage() {
     loadBilling();
   }, []);
 
+  const handleUpgrade = async () => {
+    try {
+      setCheckoutLoading(true);
+      setError("");
+
+      const { data: tokenData, error: tokenError } = await token();
+
+      if (tokenError || !tokenData?.token) {
+        throw new Error("Please sign in again.");
+      }
+
+      const response = await fetch(
+        `${API_URL}/payments/create-checkout-session`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tokenData.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.url) {
+        throw new Error(result.message || "Could not start checkout.");
+      }
+
+      window.location.assign(result.url);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Unable to start checkout."
+      );
+      setCheckoutLoading(false);
+    }
+  };
+
   const isPro = currentPlan.toLowerCase() === "pro";
 
   return (
@@ -77,13 +115,15 @@ export default function StudentBillingPage() {
         </p>
       </div>
 
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       {loading ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-gray-500">
           Loading billing details...
-        </div>
-      ) : error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-          {error}
         </div>
       ) : (
         <>
@@ -103,7 +143,9 @@ export default function StudentBillingPage() {
                     Student {isPro ? "Pro" : "Free"}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    {isPro ? "$10/month subscription" : "No active paid subscription"}
+                    {isPro
+                      ? "$10/month subscription"
+                      : "No active paid subscription"}
                   </p>
                 </div>
               </div>
@@ -216,10 +258,13 @@ export default function StudentBillingPage() {
                 </div>
               ) : (
                 <button
-                  disabled
-                  className="mt-8 w-full cursor-not-allowed rounded-xl bg-gray-200 px-5 py-3 text-sm font-semibold text-gray-500"
+                  onClick={handleUpgrade}
+                  disabled={checkoutLoading}
+                  className="mt-8 w-full rounded-xl bg-teal-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Stripe Integration Coming Next
+                  {checkoutLoading
+                    ? "Redirecting to Stripe..."
+                    : "Upgrade to Pro"}
                 </button>
               )}
             </div>
