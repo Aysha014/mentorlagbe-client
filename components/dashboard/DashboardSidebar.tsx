@@ -17,6 +17,7 @@ import {
   LogOut,
   Bookmark,
   UserRound,
+  Star,
 } from "lucide-react";
 
 const menus = {
@@ -24,6 +25,7 @@ const menus = {
     { label: "Overview", href: "/dashboard/student", icon: LayoutDashboard },
     { label: "My Applications", href: "/dashboard/student/my-applications", icon: FileText },
     { label: "Saved Tuitions", href: "/dashboard/student/bookmarks", icon: Bookmark },
+    { label: "My Reviews", href: "/dashboard/student/reviews", icon: Star },
     { label: "Browse Tuitions", href: "/tuitions", icon: BookOpen },
     { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
   ],
@@ -77,16 +79,16 @@ export default function DashboardSidebar() {
     }
   }, [isPending, role, pathname, router]);
 
-  // Wait for the actual user role before displaying navigation.
   if (isPending || !role) {
     return (
       <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white lg:block">
-        <div className="h-20 border-b border-gray-100 px-6 flex items-center gap-2">
+        <div className="flex h-20 items-center gap-2 border-b border-gray-100 px-6">
           <GraduationCap size={27} className="text-teal-800" />
           <span className="text-xl font-bold text-teal-800">
             MentorLagbe
           </span>
         </div>
+
         <div className="space-y-4 px-5 py-6">
           <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
           <div className="h-11 animate-pulse rounded-xl bg-gray-100" />
@@ -118,8 +120,9 @@ export default function DashboardSidebar() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:translate-x-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
         <div className="flex h-20 items-center justify-between border-b border-gray-100 px-6">
           <Link
@@ -148,6 +151,7 @@ export default function DashboardSidebar() {
           <nav className="space-y-2">
             {currentMenus.map((item) => {
               const Icon = item.icon;
+
               const active =
                 pathname === item.href ||
                 (item.href !== `/dashboard/${role}` &&
@@ -158,10 +162,11 @@ export default function DashboardSidebar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${active
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+                    active
                       ? "bg-teal-50 text-teal-800"
                       : "text-gray-600 hover:bg-gray-50 hover:text-teal-800"
-                    }`}
+                  }`}
                 >
                   <Icon size={19} />
                   {item.label}

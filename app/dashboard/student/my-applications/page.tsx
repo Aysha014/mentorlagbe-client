@@ -9,6 +9,7 @@ import {
   XCircle,
   Clock,
   GraduationCap,
+  Star,
 } from "lucide-react";
 import { token } from "@/lib/auth-client";
 
@@ -69,12 +70,12 @@ export default function MyApplicationsPage() {
   };
 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    void fetchApplications();
-  }, 0);
+    const timer = setTimeout(() => {
+      void fetchApplications();
+    }, 0);
 
-  return () => clearTimeout(timer);
-}, []);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleCancel = async (applicationId: string) => {
     const confirmed = window.confirm(
@@ -256,19 +257,31 @@ export default function MyApplicationsPage() {
                   </p>
                 </div>
 
-                {application.status?.toLowerCase() === "pending" && (
-                  <button
-                    onClick={() => handleCancel(application.id)}
-                    disabled={cancelling === application.id}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    <XCircle size={17} />
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  {application.status?.toLowerCase() === "pending" && (
+                    <button
+                      onClick={() => handleCancel(application.id)}
+                      disabled={cancelling === application.id}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <XCircle size={17} />
 
-                    {cancelling === application.id
-                      ? "Cancelling..."
-                      : "Cancel Application"}
-                  </button>
-                )}
+                      {cancelling === application.id
+                        ? "Cancelling..."
+                        : "Cancel Application"}
+                    </button>
+                  )}
+
+                  {application.status?.toLowerCase() === "accepted" && (
+                    <Link
+                      href="/dashboard/student/reviews"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-600"
+                    >
+                      <Star size={17} />
+                      Add Review
+                    </Link>
+                  )}
+                </div>
               </div>
             </div>
           ))}
