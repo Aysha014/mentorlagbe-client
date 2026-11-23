@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
 import {
   GraduationCap,
   Menu,
@@ -206,6 +207,7 @@ export function Navbar() {
 
         {/* Desktop authentication */}
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           {isPending ? (
             <div className="h-10 w-28 animate-pulse rounded-xl bg-slate-100" />
           ) : user ? (
@@ -262,6 +264,9 @@ export function Navbar() {
           id="mobile-navigation"
           className="border-t border-[#E5EAE5] bg-white px-5 py-5 shadow-lg md:hidden"
         >
+          <div className="mb-3 flex justify-end">
+            <ThemeToggle />
+          </div>
           <div className="flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link

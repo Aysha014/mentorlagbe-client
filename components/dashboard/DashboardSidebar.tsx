@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "@/lib/auth-client";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
+
 import {
   LayoutDashboard,
   FileText,
@@ -81,19 +83,19 @@ export default function DashboardSidebar() {
 
   if (isPending || !role) {
     return (
-      <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white lg:block">
-        <div className="flex h-20 items-center gap-2 border-b border-gray-100 px-6">
-          <GraduationCap size={27} className="text-teal-800" />
-          <span className="text-xl font-bold text-teal-800">
+      <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950 lg:block">
+        <div className="flex h-20 items-center gap-2 border-b border-gray-100 px-6 dark:border-gray-800">
+          <GraduationCap size={27} className="text-teal-700" />
+          <span className="text-xl font-bold text-teal-700">
             MentorLagbe
           </span>
         </div>
 
         <div className="space-y-4 px-5 py-6">
-          <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
-          <div className="h-11 animate-pulse rounded-xl bg-gray-100" />
-          <div className="h-11 animate-pulse rounded-xl bg-gray-100" />
-          <div className="h-11 animate-pulse rounded-xl bg-gray-100" />
+          <div className="h-3 w-24 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
+          <div className="h-11 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+          <div className="h-11 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
+          <div className="h-11 animate-pulse rounded-xl bg-gray-100 dark:bg-gray-800" />
         </div>
       </aside>
     );
@@ -103,47 +105,56 @@ export default function DashboardSidebar() {
 
   return (
     <>
+      {/* Mobile menu button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-50 rounded-lg border border-gray-200 bg-white p-2 text-gray-700 shadow-sm lg:hidden"
+        className="fixed left-4 top-4 z-50 rounded-lg border border-gray-200 bg-white p-2 text-gray-700 shadow-sm transition-colors dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 lg:hidden"
         aria-label="Open dashboard menu"
       >
         <Menu size={22} />
       </button>
 
+      {/* Mobile overlay */}
       {mobileOpen && (
         <button
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
           aria-label="Close dashboard menu"
         />
       )}
 
+      {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-300 dark:border-gray-800 dark:bg-gray-950 lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-20 items-center justify-between border-b border-gray-100 px-6">
+        {/* Header */}
+        <div className="flex h-20 shrink-0 items-center justify-between border-b border-gray-100 px-5 dark:border-gray-800">
           <Link
             href="/"
-            className="flex items-center gap-2 text-xl font-bold text-teal-800"
+            className="flex items-center gap-2 text-xl font-bold text-teal-800 dark:text-teal-400"
             onClick={() => setMobileOpen(false)}
           >
             <GraduationCap size={27} />
             MentorLagbe
           </Link>
 
-          <button
-            onClick={() => setMobileOpen(false)}
-            className="text-gray-500 lg:hidden"
-            aria-label="Close menu"
-          >
-            <X size={22} />
-          </button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-white lg:hidden"
+              aria-label="Close menu"
+            >
+              <X size={22} />
+            </button>
+          </div>
         </div>
 
-        <div className="px-5 py-6">
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto px-5 py-6">
           <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
             {role} Menu
           </p>
@@ -162,10 +173,10 @@ export default function DashboardSidebar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors duration-200 ${
                     active
-                      ? "bg-teal-50 text-teal-800"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-teal-800"
+                      ? "bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-300"
+                      : "text-gray-600 hover:bg-gray-50 hover:text-teal-800 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-teal-300"
                   }`}
                 >
                   <Icon size={19} />
@@ -176,10 +187,11 @@ export default function DashboardSidebar() {
           </nav>
         </div>
 
-        <div className="mt-auto border-t border-gray-100 p-5">
+        {/* Footer */}
+        <div className="shrink-0 border-t border-gray-100 p-5 dark:border-gray-800">
           <Link
             href="/"
-            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-50 hover:text-teal-800 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-teal-300"
           >
             <LogOut size={19} />
             Back to Website
