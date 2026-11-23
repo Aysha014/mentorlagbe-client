@@ -18,7 +18,8 @@ import {
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Tuition {
-  _id: string;
+   id: string;
+  _id?: string;
   title: string;
   subject: string;
   classLevel: string;
@@ -163,7 +164,7 @@ export default function MyTuitionsPage() {
       const jwt = await getToken();
 
       const response = await fetch(
-        `${API_URL}/tutor/tuitions/${editingTuition._id}`,
+        `${API_URL}/tutor/tuitions/${editingTuition.id}`,
         {
           method: "PATCH",
           headers: {
@@ -200,14 +201,14 @@ export default function MyTuitionsPage() {
   const handleStatusChange = async (tuition: Tuition) => {
     setError("");
     setSuccess("");
-    setActionId(tuition._id);
+    setActionId(tuition.id);
 
     try {
       const jwt = await getToken();
       const newStatus = tuition.status === "active" ? "closed" : "active";
 
       const response = await fetch(
-        `${API_URL}/tutor/tuitions/${tuition._id}/status`,
+        `${API_URL}/tutor/tuitions/${tuition.id}/status`,
         {
           method: "PATCH",
           headers: {
@@ -242,13 +243,13 @@ export default function MyTuitionsPage() {
 
     setError("");
     setSuccess("");
-    setActionId(tuition._id);
+    setActionId(tuition.id);
 
     try {
       const jwt = await getToken();
 
       const response = await fetch(
-        `${API_URL}/tutor/tuitions/${tuition._id}`,
+        `${API_URL}/tutor/tuitions/${tuition.id}`,
         {
           method: "DELETE",
           headers: {
@@ -338,7 +339,7 @@ export default function MyTuitionsPage() {
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {tuitions.map((tuition) => (
             <article
-              key={tuition._id}
+              key={tuition.id}
               className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
             >
               {tuition.bannerImage ? (
@@ -426,7 +427,7 @@ export default function MyTuitionsPage() {
                     disabled={!!actionId}
                     className="rounded-lg bg-teal-50 px-3 py-2.5 text-sm font-medium text-teal-700 hover:bg-teal-100 disabled:opacity-50"
                   >
-                    {actionId === tuition._id
+                    {actionId === tuition.id
                       ? "Please wait..."
                       : tuition.status === "active"
                         ? "Close Tuition"
