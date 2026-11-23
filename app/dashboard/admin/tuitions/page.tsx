@@ -33,21 +33,32 @@ interface Tuition {
   createdAt: string;
 }
 
+type TuitionFilter = "all" | "pending" | "approved" | "rejected";
+
 export default function AdminTuitionsPage() {
   const [tuitions, setTuitions] = useState<Tuition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState("");
+  const [selectedStatus, setSelectedStatus] =
+    useState<TuitionFilter>("all");
 
+  // Fetch all tuition posts
   const fetchTuitions = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
+      if (!API_URL) {
+        throw new Error("API URL is not configured.");
+      }
+
       const { data: tokenData, error: tokenError } = await token();
 
       if (tokenError || !tokenData?.token) {
-        throw new Error("Authentication token not found. Please sign in again.");
+        throw new Error(
+          "Authentication token not found. Please sign in again."
+        );
       }
 
       const response = await fetch(`${API_URL}/admin/tuitions`, {
@@ -66,7 +77,9 @@ export default function AdminTuitionsPage() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || "Failed to load tuition posts.");
+        throw new Error(
+          result.message || "Failed to load tuition posts."
+        );
       }
 
       setTuitions(result.data || []);
@@ -79,21 +92,28 @@ export default function AdminTuitionsPage() {
     }
   }, []);
 
+  // Initial data loading
   useEffect(() => {
-  const timer = setTimeout(() => {
-    void fetchTuitions();
-  }, 0);
+    const timer = setTimeout(() => {
+      void fetchTuitions();
+    }, 0);
 
-  return () => clearTimeout(timer);
-}, [fetchTuitions]);
+    return () => clearTimeout(timer);
+  }, [fetchTuitions]);
 
+  // Approve or reject a tuition
   const updateApproval = async (
     tuitionId: string,
     approvalStatus: "approved" | "rejected"
   ) => {
-    const action = approvalStatus === "approved" ? "approve" : "reject";
+    const action =
+      approvalStatus === "approved" ? "approve" : "reject";
 
-    if (!window.confirm(`Are you sure you want to ${action} this tuition?`)) {
+    if (
+      !window.confirm(
+        `Are you sure you want to ${action} this tuition?`
+      )
+    ) {
       return;
     }
 
@@ -103,7 +123,9 @@ export default function AdminTuitionsPage() {
       const { data: tokenData, error: tokenError } = await token();
 
       if (tokenError || !tokenData?.token) {
-        throw new Error("Authentication token not found. Please sign in again.");
+        throw new Error(
+          "Authentication token not found. Please sign in again."
+        );
       }
 
       const response = await fetch(
@@ -121,7 +143,9 @@ export default function AdminTuitionsPage() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || "Failed to update tuition.");
+        throw new Error(
+          result.message || "Failed to update tuition."
+        );
       }
 
       setTuitions((previous) =>
@@ -132,12 +156,17 @@ export default function AdminTuitionsPage() {
         )
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Something went wrong.");
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong."
+      );
     } finally {
       setUpdatingId("");
     }
   };
 
+  // Status counts
   const pendingCount = tuitions.filter(
     (item) => item.approvalStatus === "pending"
   ).length;
@@ -150,6 +179,23 @@ export default function AdminTuitionsPage() {
     (item) => item.approvalStatus === "rejected"
   ).length;
 
+  // Filter tuition posts according to selected card
+  const filteredTuitions =
+    selectedStatus === "all"
+      ? tuitions
+      : tuitions.filter(
+          (tuition) =>
+            tuition.approvalStatus === selectedStatus
+        );
+
+  // Toggle status filter
+  const handleStatusFilter = (status: TuitionFilter) => {
+    setSelectedStatus((current) =>
+      current === status ? "all" : status
+    );
+  };
+
+  // Status badge styling
   const statusStyle = (status: string) => {
     if (status === "approved") {
       return "bg-green-50 text-green-700";
@@ -164,54 +210,46 @@ export default function AdminTuitionsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-7">
+      {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <p className="text-sm font-semibold text-teal-700">
             ADMINISTRATION
           </p>
+
           <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
             Manage Tuitions
           </h1>
+
           <p className="mt-2 text-sm text-slate-500">
             Review and manage tuition posts submitted by tutors.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={fetchTuitions}
           disabled={loading}
           className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          <RefreshCw
+            size={16}
+            className={loading ? "animate-spin" : ""}
+          />
           Refresh
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard
-          title="Pending Review"
-          value={pendingCount}
-          icon={<Clock size={21} />}
-          color="amber"
-        />
-        <StatCard
-          title="Approved"
-          value={approvedCount}
-          icon={<CheckCircle size={21} />}
-          color="green"
-        />
-        <StatCard
-          title="Rejected"
-          value={rejectedCount}
-          icon={<XCircle size={21} />}
-          color="red"
-        />
-      </div>
-
+      {/* Error Message */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
           {error}
+
           <button
+            type="button"
             onClick={fetchTuitions}
             className="ml-2 font-bold underline"
           >
@@ -220,6 +258,58 @@ export default function AdminTuitionsPage() {
         </div>
       )}
 
+      {/* Clickable Status Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          title="Pending Review"
+          value={pendingCount}
+          icon={<Clock size={21} />}
+          color="amber"
+          active={selectedStatus === "pending"}
+          onClick={() => handleStatusFilter("pending")}
+        />
+
+        <StatCard
+          title="Approved"
+          value={approvedCount}
+          icon={<CheckCircle size={21} />}
+          color="green"
+          active={selectedStatus === "approved"}
+          onClick={() => handleStatusFilter("approved")}
+        />
+
+        <StatCard
+          title="Rejected"
+          value={rejectedCount}
+          icon={<XCircle size={21} />}
+          color="red"
+          active={selectedStatus === "rejected"}
+          onClick={() => handleStatusFilter("rejected")}
+        />
+      </div>
+
+      {/* Selected Filter Indicator */}
+      {selectedStatus !== "all" && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-600">
+            Showing{" "}
+            <span className="font-semibold capitalize">
+              {selectedStatus}
+            </span>{" "}
+            tuition posts ({filteredTuitions.length})
+          </p>
+
+          <button
+            type="button"
+            onClick={() => setSelectedStatus("all")}
+            className="text-sm font-semibold text-teal-700 hover:text-teal-800"
+          >
+            Show all tuitions
+          </button>
+        </div>
+      )}
+
+      {/* Loading State */}
       {loading ? (
         <div className="grid gap-5 md:grid-cols-2">
           {[1, 2, 3, 4].map((item) => (
@@ -229,19 +319,40 @@ export default function AdminTuitionsPage() {
             />
           ))}
         </div>
-      ) : tuitions.length === 0 ? (
+      ) : filteredTuitions.length === 0 ? (
+        /* Empty State */
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
-          <BookOpen className="mx-auto text-slate-400" size={38} />
+          <BookOpen
+            className="mx-auto text-slate-400"
+            size={38}
+          />
+
           <h3 className="mt-4 font-semibold text-slate-800">
-            No tuition posts found
+            {selectedStatus === "all"
+              ? "No tuition posts found"
+              : `No ${selectedStatus} tuition posts found`}
           </h3>
+
           <p className="mt-1 text-sm text-slate-500">
-            Tuition posts submitted by tutors will appear here.
+            {selectedStatus === "all"
+              ? "Tuition posts submitted by tutors will appear here."
+              : "There are no tuition posts with this status."}
           </p>
+
+          {selectedStatus !== "all" && (
+            <button
+              type="button"
+              onClick={() => setSelectedStatus("all")}
+              className="mt-4 text-sm font-semibold text-teal-700 hover:underline"
+            >
+              Show all tuitions
+            </button>
+          )}
         </div>
       ) : (
+        /* Tuition Cards */
         <div className="grid gap-5 md:grid-cols-2">
-          {tuitions.map((tuition) => (
+          {filteredTuitions.map((tuition) => (
             <div
               key={tuition.id}
               className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
@@ -262,6 +373,7 @@ export default function AdminTuitionsPage() {
                     <h2 className="text-lg font-bold text-slate-900">
                       {tuition.title}
                     </h2>
+
                     <p className="mt-1 text-sm text-teal-700">
                       {tuition.subject} · {tuition.classLevel}
                     </p>
@@ -284,6 +396,7 @@ export default function AdminTuitionsPage() {
                     <br />
                     ৳{Number(tuition.salary || 0).toLocaleString()}
                   </p>
+
                   <p>
                     <span className="font-semibold text-slate-800">
                       Mode
@@ -291,6 +404,7 @@ export default function AdminTuitionsPage() {
                     <br />
                     {tuition.mode}
                   </p>
+
                   <p>
                     <span className="font-semibold text-slate-800">
                       Days/Week
@@ -298,12 +412,15 @@ export default function AdminTuitionsPage() {
                     <br />
                     {tuition.daysPerWeek}
                   </p>
+
                   <p>
                     <span className="font-semibold text-slate-800">
                       Post Status
                     </span>
                     <br />
-                    <span className="capitalize">{tuition.status}</span>
+                    <span className="capitalize">
+                      {tuition.status}
+                    </span>
                   </p>
                 </div>
 
@@ -324,6 +441,7 @@ export default function AdminTuitionsPage() {
                   <p className="text-sm font-semibold text-slate-800">
                     Tutor: {tuition.tutorName || "Not available"}
                   </p>
+
                   <p className="mt-1 break-all text-xs text-slate-500">
                     {tuition.tutorEmail || "Email not available"}
                   </p>
@@ -333,13 +451,17 @@ export default function AdminTuitionsPage() {
                   <CalendarDays size={14} />
                   Posted:{" "}
                   {tuition.createdAt
-                    ? new Date(tuition.createdAt).toLocaleDateString()
+                    ? new Date(
+                        tuition.createdAt
+                      ).toLocaleDateString()
                     : "Not available"}
                 </div>
 
+                {/* Approval Actions */}
                 {tuition.approvalStatus === "pending" && (
                   <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row">
                     <button
+                      type="button"
                       onClick={() =>
                         updateApproval(tuition.id, "approved")
                       }
@@ -347,10 +469,13 @@ export default function AdminTuitionsPage() {
                       className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 disabled:opacity-50"
                     >
                       <CheckCircle size={16} />
-                      {updatingId === tuition.id ? "Updating..." : "Approve"}
+                      {updatingId === tuition.id
+                        ? "Updating..."
+                        : "Approve"}
                     </button>
 
                     <button
+                      type="button"
                       onClick={() =>
                         updateApproval(tuition.id, "rejected")
                       }
@@ -371,16 +496,21 @@ export default function AdminTuitionsPage() {
   );
 }
 
+// Reusable clickable status card
 function StatCard({
   title,
   value,
   icon,
   color,
+  active,
+  onClick,
 }: {
   title: string;
   value: number;
   icon: React.ReactNode;
   color: "amber" | "green" | "red";
+  active: boolean;
+  onClick: () => void;
 }) {
   const styles = {
     amber: "bg-amber-50 text-amber-700",
@@ -389,12 +519,29 @@ function StatCard({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`w-full rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 ${
+        active
+          ? "border-teal-500 ring-2 ring-teal-100"
+          : "border-slate-200"
+      }`}
+    >
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-slate-500">{title}</p>
-        <div className={`rounded-xl p-2.5 ${styles[color]}`}>{icon}</div>
+        <p className="text-sm font-medium text-slate-500">
+          {title}
+        </p>
+
+        <div className={`rounded-xl p-2.5 ${styles[color]}`}>
+          {icon}
+        </div>
       </div>
-      <p className="mt-4 text-3xl font-bold text-slate-900">{value}</p>
-    </div>
+
+      <p className="mt-4 text-3xl font-bold text-slate-900">
+        {value}
+      </p>
+    </button>
   );
 }
