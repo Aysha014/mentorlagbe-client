@@ -52,27 +52,48 @@ export default function DashboardSidebar() {
     session?.user as { role?: string } | undefined
   )?.role?.toLowerCase();
 
-  const role = userRole && userRole in menus
-    ? (userRole as keyof typeof menus)
-    : "student";
+  const role =
+    userRole && userRole in menus
+      ? (userRole as keyof typeof menus)
+      : null;
 
   useEffect(() => {
-    if (isPending || !userRole || !(userRole in menus)) return;
+    if (isPending || !role) return;
 
     const dashboardRole = pathname.split("/")[2];
 
     if (
       dashboardRole &&
       ["student", "tutor", "admin"].includes(dashboardRole) &&
-      dashboardRole !== userRole
+      dashboardRole !== role
     ) {
-      router.replace(`/dashboard/${userRole}`);
+      router.replace(`/dashboard/${role}`);
     }
 
-    if (pathname === "/dashboard/billing" && userRole === "tutor") {
+    if (pathname === "/dashboard/billing" && role === "tutor") {
       router.replace("/dashboard/tutor/billing");
     }
-  }, [isPending, userRole, pathname, router]);
+  }, [isPending, role, pathname, router]);
+
+  // Wait for the actual user role before displaying navigation.
+  if (isPending || !role) {
+    return (
+      <aside className="hidden w-64 shrink-0 border-r border-gray-200 bg-white lg:block">
+        <div className="h-20 border-b border-gray-100 px-6 flex items-center gap-2">
+          <GraduationCap size={27} className="text-teal-800" />
+          <span className="text-xl font-bold text-teal-800">
+            MentorLagbe
+          </span>
+        </div>
+        <div className="space-y-4 px-5 py-6">
+          <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
+          <div className="h-11 animate-pulse rounded-xl bg-gray-100" />
+          <div className="h-11 animate-pulse rounded-xl bg-gray-100" />
+          <div className="h-11 animate-pulse rounded-xl bg-gray-100" />
+        </div>
+      </aside>
+    );
+  }
 
   const currentMenus = menus[role];
 
