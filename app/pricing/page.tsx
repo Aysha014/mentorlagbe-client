@@ -60,7 +60,7 @@ export default function PricingPage() {
           </h1>
 
           <p className="mx-auto mt-3 max-w-xl text-gray-500">
-            Whether you're looking for a tutor or teaching students,
+            Whether you&apos;re looking for a tutor or teaching students,
             choose a plan that works for you.
           </p>
         </div>

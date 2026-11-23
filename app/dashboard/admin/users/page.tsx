@@ -74,7 +74,11 @@ export default function AdminUsersPage() {
   }, []);
 
   useEffect(() => {
-    fetchUsers();
+    const timer = setTimeout(() => {
+      void fetchUsers();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchUsers]);
 
   const updateRole = async (user: User, newRole: UserRole) => {

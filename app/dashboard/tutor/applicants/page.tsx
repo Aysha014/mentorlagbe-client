@@ -10,7 +10,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  BookOpen,
   CalendarDays,
   Phone,
   Mail,
@@ -84,7 +83,11 @@ export default function TutorApplicantsPage() {
   }, []);
 
   useEffect(() => {
-    fetchApplicants();
+    const timer = setTimeout(() => {
+      void fetchApplicants();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [fetchApplicants]);
 
   const updateStatus = async (
@@ -264,11 +267,10 @@ export default function TutorApplicantsPage() {
           <button
             key={item.value}
             onClick={() => setFilter(item.value)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-              filter === item.value
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${filter === item.value
                 ? "bg-teal-700 text-white"
                 : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-            }`}
+              }`}
           >
             {item.label}
           </button>

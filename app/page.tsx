@@ -14,6 +14,8 @@ import {
   Search,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 interface Tuition {
   id: string;
   title: string;

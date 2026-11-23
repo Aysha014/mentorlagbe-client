@@ -72,8 +72,8 @@ export default function SignInPage() {
 
                 {/* Left Panel */}
                 <div className="relative hidden flex-col justify-between overflow-hidden bg-primary p-10 text-primary-foreground md:flex lg:p-12">
-                    <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full border-[35px] border-white/10" />
-                    <div className="absolute -bottom-24 -left-20 h-72 w-72 rounded-full border-[45px] border-white/10" />
+                    <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full border-35 border-white/10" />
+                    <div className="absolute -bottom-24 -left-20 h-72 w-72 rounded-full border-45 border-white/10" />
 
                     <div className="relative z-10">
                         <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">

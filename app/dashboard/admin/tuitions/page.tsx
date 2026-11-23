@@ -80,8 +80,12 @@ export default function AdminTuitionsPage() {
   }, []);
 
   useEffect(() => {
-    fetchTuitions();
-  }, [fetchTuitions]);
+  const timer = setTimeout(() => {
+    void fetchTuitions();
+  }, 0);
+
+  return () => clearTimeout(timer);
+}, [fetchTuitions]);
 
   const updateApproval = async (
     tuitionId: string,

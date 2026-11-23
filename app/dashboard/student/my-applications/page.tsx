@@ -69,8 +69,12 @@ export default function MyApplicationsPage() {
   };
 
   useEffect(() => {
-    fetchApplications();
-  }, []);
+  const timer = setTimeout(() => {
+    void fetchApplications();
+  }, 0);
+
+  return () => clearTimeout(timer);
+}, []);
 
   const handleCancel = async (applicationId: string) => {
     const confirmed = window.confirm(

@@ -9,7 +9,7 @@ export default function PaymentCancel() {
           Payment Cancelled
         </h1>
         <p className="mt-3 text-gray-600">
-          Your payment was not completed. You can try again whenever you're ready.
+          Your payment was not completed. You can try again whenever you&apos;re ready.
         </p>
         <Link
           href="/pricing"

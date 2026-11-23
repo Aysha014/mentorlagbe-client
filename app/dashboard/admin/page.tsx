@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { token } from "@/lib/auth-client";
 import {
   Users,
@@ -35,15 +35,21 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
+      if (!API_URL) {
+        throw new Error("API URL is not configured.");
+      }
+
       const { data: tokenData, error: tokenError } = await token();
 
       if (tokenError || !tokenData?.token) {
-        throw new Error("Authentication token not found. Please sign in again.");
+        throw new Error(
+          "Authentication token not found. Please sign in again."
+        );
       }
 
       const response = await fetch(`${API_URL}/admin/dashboard`, {
@@ -62,7 +68,9 @@ export default function AdminDashboard() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.message || "Failed to load admin statistics.");
+        throw new Error(
+          result.message || "Failed to load admin statistics."
+        );
       }
 
       setStats({
@@ -79,11 +87,15 @@ export default function AdminDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    const timer = setTimeout(() => {
+      void fetchStats();
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [fetchStats]);
 
   const cards = [
     {
@@ -118,37 +130,60 @@ export default function AdminDashboard() {
     },
   ];
 
+  const totalTuitions =
+    stats.pendingTuitions + stats.approvedTuitions;
+
+  const pendingPercentage = totalTuitions
+    ? (stats.pendingTuitions / totalTuitions) * 100
+    : 0;
+
+  const approvedPercentage = totalTuitions
+    ? (stats.approvedTuitions / totalTuitions) * 100
+    : 0;
+
   return (
     <div className="mx-auto max-w-7xl space-y-8">
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-teal-600">
             Administration
           </p>
+
           <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
             Admin Overview
           </h1>
+
           <p className="mt-2 text-sm text-slate-500">
             Monitor your MentorLagbe platform.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={fetchStats}
           disabled={loading}
           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
         >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+          <RefreshCw
+            size={16}
+            className={loading ? "animate-spin" : ""}
+          />
           Refresh
         </button>
       </div>
 
+      {/* Error Message */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+        >
           {error}
         </div>
       )}
 
+      {/* Statistics Cards */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map((card) => {
           const Icon = card.icon;
@@ -158,18 +193,18 @@ export default function AdminDashboard() {
               key={card.label}
               className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm"
             >
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-slate-500">
                     {card.label}
                   </p>
 
-                  <h2 className="mt-3 text-3xl font-bold text-slate-900">
+                  <h2 className="mt-3 break-words text-3xl font-bold text-slate-900">
                     {loading ? "..." : card.value}
                   </h2>
                 </div>
 
-                <div className={`rounded-xl p-3 ${card.color}`}>
+                <div className={`shrink-0 rounded-xl p-3 ${card.color}`}>
                   <Icon size={24} />
                 </div>
               </div>
@@ -178,57 +213,52 @@ export default function AdminDashboard() {
         })}
       </div>
 
+      {/* Tuition Approval Summary */}
       <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-bold text-slate-900">
           Tuition Approval Summary
         </h2>
 
-        <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          {/* Pending */}
           <div>
-            <div className="mb-2 flex justify-between text-sm">
+            <div className="mb-2 flex justify-between gap-3 text-sm">
               <span className="font-medium text-slate-600">
                 Pending approval
               </span>
+
               <span className="font-bold text-amber-600">
                 {loading ? "..." : stats.pendingTuitions}
               </span>
             </div>
+
             <div className="h-3 overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-amber-400"
+                className="h-full rounded-full bg-amber-400 transition-all duration-500"
                 style={{
-                  width: `${
-                    stats.pendingTuitions + stats.approvedTuitions
-                      ? (stats.pendingTuitions /
-                          (stats.pendingTuitions + stats.approvedTuitions)) *
-                        100
-                      : 0
-                  }%`,
+                  width: `${pendingPercentage}%`,
                 }}
               />
             </div>
           </div>
 
+          {/* Approved */}
           <div>
-            <div className="mb-2 flex justify-between text-sm">
+            <div className="mb-2 flex justify-between gap-3 text-sm">
               <span className="font-medium text-slate-600">
                 Approved
               </span>
+
               <span className="font-bold text-green-600">
                 {loading ? "..." : stats.approvedTuitions}
               </span>
             </div>
+
             <div className="h-3 overflow-hidden rounded-full bg-slate-100">
               <div
-                className="h-full rounded-full bg-green-500"
+                className="h-full rounded-full bg-green-500 transition-all duration-500"
                 style={{
-                  width: `${
-                    stats.pendingTuitions + stats.approvedTuitions
-                      ? (stats.approvedTuitions /
-                          (stats.pendingTuitions + stats.approvedTuitions)) *
-                        100
-                      : 0
-                  }%`,
+                  width: `${approvedPercentage}%`,
                 }}
               />
             </div>

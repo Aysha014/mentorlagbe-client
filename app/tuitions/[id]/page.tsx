@@ -13,7 +13,6 @@ import {
   GraduationCap,
   MapPin,
   Monitor,
-  Wallet,
   UserRound,
 } from "lucide-react";
 import { useSession, token } from "@/lib/auth-client";
