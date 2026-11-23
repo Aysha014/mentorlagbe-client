@@ -2,15 +2,15 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSession } from "@/lib/auth-client";
 import {
   LayoutDashboard,
   FileText,
   BookOpen,
   CreditCard,
   Users,
-  Settings,
   Menu,
   X,
   GraduationCap,
@@ -19,18 +19,18 @@ import {
 
 const menus = {
   student: [
-  { label: "Overview", href: "/dashboard/student", icon: LayoutDashboard },
-  { label: "My Applications", href: "/dashboard/student/my-applications", icon: FileText },
-  { label: "Browse Tuitions", href: "/tuitions", icon: BookOpen },
-  { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
-],
- tutor: [
-  { label: "Overview", href: "/dashboard/tutor", icon: LayoutDashboard },
-  { label: "My Tuitions", href: "/dashboard/tutor/my-tuitions", icon: BookOpen },
-  { label: "Post Tuition", href: "/dashboard/tutor/post-tuition", icon: FileText },
-  { label: "Applicants", href: "/dashboard/tutor/applicants", icon: Users },
-  { label: "Billing", href: "/dashboard/tutor/billing", icon: CreditCard },
-],
+    { label: "Overview", href: "/dashboard/student", icon: LayoutDashboard },
+    { label: "My Applications", href: "/dashboard/student/my-applications", icon: FileText },
+    { label: "Browse Tuitions", href: "/tuitions", icon: BookOpen },
+    { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
+  ],
+  tutor: [
+    { label: "Overview", href: "/dashboard/tutor", icon: LayoutDashboard },
+    { label: "My Tuitions", href: "/dashboard/tutor/my-tuitions", icon: BookOpen },
+    { label: "Post Tuition", href: "/dashboard/tutor/post-tuition", icon: FileText },
+    { label: "Applicants", href: "/dashboard/tutor/applicants", icon: Users },
+    { label: "Billing", href: "/dashboard/tutor/billing", icon: CreditCard },
+  ],
   admin: [
     { label: "Overview", href: "/dashboard/admin", icon: LayoutDashboard },
     { label: "Manage Tuitions", href: "/dashboard/admin/tuitions", icon: BookOpen },
@@ -41,10 +41,38 @@ const menus = {
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const role = pathname.split("/")[2] as keyof typeof menus;
-  const currentMenus = menus[role] || menus.student;
+  const { data: session, isPending } = useSession();
+
+  const userRole = (
+    session?.user as { role?: string } | undefined
+  )?.role?.toLowerCase();
+
+  const role = userRole && userRole in menus
+    ? (userRole as keyof typeof menus)
+    : "student";
+
+  useEffect(() => {
+    if (isPending || !userRole || !(userRole in menus)) return;
+
+    const dashboardRole = pathname.split("/")[2];
+
+    if (
+      dashboardRole &&
+      ["student", "tutor", "admin"].includes(dashboardRole) &&
+      dashboardRole !== userRole
+    ) {
+      router.replace(`/dashboard/${userRole}`);
+    }
+
+    if (pathname === "/dashboard/billing" && userRole === "tutor") {
+      router.replace("/dashboard/tutor/billing");
+    }
+  }, [isPending, userRole, pathname, router]);
+
+  const currentMenus = menus[role];
 
   return (
     <>
@@ -90,7 +118,7 @@ export default function DashboardSidebar() {
 
         <div className="px-5 py-6">
           <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
-            {role || "Dashboard"} Menu
+            {role} Menu
           </p>
 
           <nav className="space-y-2">

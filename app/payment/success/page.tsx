@@ -31,7 +31,7 @@ export default async function PaymentSuccess({
           being activated.
         </p>
         <a
-          href="/dashboard"
+          href="/dashboard/student"
           className="mt-6 inline-block rounded-lg bg-teal-700 px-6 py-3 font-semibold text-white"
         >
           Go to Dashboard

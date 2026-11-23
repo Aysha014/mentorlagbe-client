@@ -9,6 +9,7 @@ import {
   Crown,
   GraduationCap,
   ArrowLeft,
+  Loader2,
 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -16,6 +17,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 export default function TutorBillingPage() {
   const [currentPlan, setCurrentPlan] = useState("Free");
   const [loading, setLoading] = useState(true);
+  const [upgrading, setUpgrading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -55,6 +57,45 @@ export default function TutorBillingPage() {
 
   const isPro = currentPlan.toLowerCase() === "pro";
 
+  const handleUpgrade = async () => {
+    try {
+      setUpgrading(true);
+      setError("");
+
+      const { data: tokenData, error: tokenError } = await token();
+
+      if (tokenError || !tokenData?.token) {
+        throw new Error("Please sign in again.");
+      }
+
+      const response = await fetch(
+        `${API_URL}/payments/create-checkout-session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${tokenData.token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.url) {
+        throw new Error(
+          result.message || "Unable to create Stripe checkout session."
+        );
+      }
+
+      window.location.assign(result.url);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Something went wrong."
+      );
+      setUpgrading(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-5xl">
       <Link
@@ -81,12 +122,18 @@ export default function TutorBillingPage() {
         <div className="rounded-2xl border border-gray-200 bg-white p-8 text-gray-500">
           Loading billing details...
         </div>
-      ) : error ? (
+      ) : error && !currentPlan ? (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
           {error}
         </div>
       ) : (
         <>
+          {error && (
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <p className="text-sm font-medium text-gray-500">
               Your current plan
@@ -103,7 +150,9 @@ export default function TutorBillingPage() {
                     Tutor {isPro ? "Pro" : "Free"}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    {isPro ? "$15/month subscription" : "No active paid subscription"}
+                    {isPro
+                      ? "$15/month subscription"
+                      : "No active paid subscription"}
                   </p>
                 </div>
               </div>
@@ -147,10 +196,7 @@ export default function TutorBillingPage() {
                   "View student applicants",
                   "Basic tutor dashboard",
                 ].map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex gap-3 text-sm text-gray-600"
-                  >
+                  <li key={feature} className="flex gap-3 text-sm text-gray-600">
                     <Check size={18} className="shrink-0 text-teal-600" />
                     {feature}
                   </li>
@@ -201,10 +247,7 @@ export default function TutorBillingPage() {
                   "Priority listing in search results",
                   "Premium support",
                 ].map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex gap-3 text-sm text-gray-600"
-                  >
+                  <li key={feature} className="flex gap-3 text-sm text-gray-600">
                     <Check size={18} className="shrink-0 text-teal-600" />
                     {feature}
                   </li>
@@ -217,10 +260,18 @@ export default function TutorBillingPage() {
                 </div>
               ) : (
                 <button
-                  disabled
-                  className="mt-8 w-full cursor-not-allowed rounded-xl bg-gray-200 px-5 py-3 text-sm font-semibold text-gray-500"
+                  onClick={handleUpgrade}
+                  disabled={upgrading}
+                  className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Stripe Integration Coming Next
+                  {upgrading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      Redirecting to Stripe...
+                    </>
+                  ) : (
+                    "Upgrade to Tutor Pro"
+                  )}
                 </button>
               )}
             </div>
