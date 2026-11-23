@@ -15,6 +15,7 @@ import {
   X,
   GraduationCap,
   LogOut,
+  UserRound,
 } from "lucide-react";
 
 const menus = {
@@ -26,6 +27,7 @@ const menus = {
   ],
   tutor: [
     { label: "Overview", href: "/dashboard/tutor", icon: LayoutDashboard },
+    { label: "My Profile", href: "/dashboard/tutor/profile", icon: UserRound },
     { label: "My Tuitions", href: "/dashboard/tutor/my-tuitions", icon: BookOpen },
     { label: "Post Tuition", href: "/dashboard/tutor/post-tuition", icon: FileText },
     { label: "Applicants", href: "/dashboard/tutor/applicants", icon: Users },
