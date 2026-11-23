@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpen,
+  Bookmark,
   Clock3,
   MapPin,
   Search,
@@ -13,6 +14,8 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
+import { token, useSession } from "@/lib/auth-client";
 
 interface Tuition {
   id: string;
@@ -57,6 +60,8 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function TuitionsPage() {
+  const { data: session } = useSession();
+
   const [tuitions, setTuitions] = useState<Tuition[]>([]);
   const [search, setSearch] = useState("");
   const [subject, setSubject] = useState("All Subjects");
@@ -68,6 +73,12 @@ export default function TuitionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>([]);
+  const [bookmarkLoadingId, setBookmarkLoadingId] = useState("");
+
+  const isStudent = session?.user?.role === "student";
+
+  // Fetch tuition opportunities
   useEffect(() => {
     const controller = new AbortController();
 
@@ -83,8 +94,9 @@ export default function TuitionsPage() {
 
         if (search.trim()) params.set("search", search.trim());
         if (subject !== "All Subjects") params.set("subject", subject);
-        if (classLevel !== "All Classes")
+        if (classLevel !== "All Classes") {
           params.set("classLevel", classLevel);
+        }
         if (mode !== "All Modes") params.set("mode", mode);
 
         const response = await fetch(
@@ -119,6 +131,99 @@ export default function TuitionsPage() {
 
     return () => controller.abort();
   }, [search, subject, classLevel, mode, page]);
+
+  // Load student's saved bookmarks
+  useEffect(() => {
+    if (!isStudent) return;
+
+    let cancelled = false;
+
+    async function fetchBookmarks() {
+      try {
+        const tokenResult = await token();
+        const accessToken = tokenResult.data?.token;
+
+        if (!accessToken) return;
+
+        const response = await fetch(`${API_URL}/student/bookmarks`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) return;
+
+        const result = await response.json();
+
+        if (!cancelled && result.success) {
+          setBookmarkedIds(
+            (result.data || []).map((item: Tuition) => item.id)
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load bookmarks:", err);
+      }
+    }
+
+    fetchBookmarks();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isStudent]);
+
+  // Add or remove a bookmark
+  async function toggleBookmark(tuitionId: string) {
+    if (!isStudent) return;
+
+    try {
+      setBookmarkLoadingId(tuitionId);
+
+      const tokenResult = await token();
+      const accessToken = tokenResult.data?.token;
+
+      if (!accessToken) {
+        toast.error("Please log in again to bookmark a tuition.");
+        return;
+      }
+
+      const isBookmarked = bookmarkedIds.includes(tuitionId);
+
+      const response = await fetch(
+        `${API_URL}/student/bookmarks/${tuitionId}`,
+        {
+          method: isBookmarked ? "DELETE" : "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        toast.error(result.message || "Unable to update bookmark.");
+        return;
+      }
+
+      setBookmarkedIds((current) =>
+        isBookmarked
+          ? current.filter((id) => id !== tuitionId)
+          : [...current, tuitionId]
+      );
+
+      toast.success(
+        isBookmarked
+          ? "Bookmark removed successfully."
+          : "Tuition bookmarked successfully."
+      );
+    } catch (err) {
+      console.error("Bookmark error:", err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setBookmarkLoadingId("");
+    }
+  }
 
   function clearFilters() {
     setSearch("");
@@ -302,64 +407,109 @@ export default function TuitionsPage() {
         ) : tuitions.length > 0 ? (
           <>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-6">
-              {tuitions.map((tuition) => (
-                <article
-                  key={tuition.id}
-                  className="group flex min-w-0 flex-col rounded-2xl border border-[#E5EAE5] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="max-w-full rounded-full bg-[#DDF3ED] px-3 py-1.5 text-xs font-semibold text-[#147D75]">
-                      {tuition.subject}
-                    </span>
-                    <span className="rounded-full bg-[#FFF1DC] px-3 py-1.5 text-xs font-semibold text-[#A56824]">
-                      {tuition.mode}
-                    </span>
-                  </div>
+              {tuitions.map((tuition) => {
+                const isBookmarked = bookmarkedIds.includes(tuition.id);
+                const isBookmarkLoading =
+                  bookmarkLoadingId === tuition.id;
 
-                  <div className="mt-5">
-                    <h3 className="break-words text-base font-bold leading-7 text-[#243B53] transition group-hover:text-[#147D75] sm:text-lg">
-                      {tuition.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-slate-500">
-                      {tuition.tutorName
-                        ? `Tutor: ${tuition.tutorName}`
-                        : "Tutor details available"}
-                    </p>
-                  </div>
-
-                  <div className="mt-5 flex-1 space-y-3 border-t border-slate-100 pt-5 text-sm text-slate-600">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-[#147D75]" />
-                      <span className="break-words">{tuition.classLevel}</span>
-                    </div>
-
-                    <div className="flex min-w-0 items-start gap-3">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#147D75]" />
-                      <span className="break-words">{tuition.location}</span>
-                    </div>
-
-                    <div className="flex min-w-0 items-start gap-3">
-                      <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[#147D75]" />
-                      <span>{tuition.daysPerWeek} days per week</span>
-                    </div>
-
-                    <div className="flex min-w-0 items-start gap-3">
-                      <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-[#147D75]" />
-                      <span>
-                        ৳{(tuition.salary ?? tuition.monthlyFee ?? 0).toLocaleString()} / month
-                      </span>
-                    </div>
-                  </div>
-
-                  <Link
-                    href={`/tuitions/${tuition.id}`}
-                    className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#147D75] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#10665F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#147D75]"
+                return (
+                  <article
+                    key={tuition.id}
+                    className="group flex min-w-0 flex-col rounded-2xl border border-[#E5EAE5] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6"
                   >
-                    View Details
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </article>
-              ))}
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="max-w-full rounded-full bg-[#DDF3ED] px-3 py-1.5 text-xs font-semibold text-[#147D75]">
+                        {tuition.subject}
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-[#FFF1DC] px-3 py-1.5 text-xs font-semibold text-[#A56824]">
+                          {tuition.mode}
+                        </span>
+
+                        {isStudent && (
+                          <button
+                            type="button"
+                            onClick={() => toggleBookmark(tuition.id)}
+                            disabled={isBookmarkLoading}
+                            aria-label={
+                              isBookmarked
+                                ? "Remove bookmark"
+                                : "Bookmark tuition"
+                            }
+                            title={
+                              isBookmarked
+                                ? "Remove bookmark"
+                                : "Save tuition"
+                            }
+                            className={`flex h-9 w-9 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                              isBookmarked
+                                ? "border-[#147D75] bg-[#DDF3ED] text-[#147D75]"
+                                : "border-slate-200 bg-white text-slate-500 hover:border-[#147D75] hover:text-[#147D75]"
+                            }`}
+                          >
+                            {isBookmarkLoading ? (
+                              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                            ) : (
+                              <Bookmark
+                                className="h-4 w-4"
+                                fill={isBookmarked ? "currentColor" : "none"}
+                              />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-5">
+                      <h3 className="break-words text-base font-bold leading-7 text-[#243B53] transition group-hover:text-[#147D75] sm:text-lg">
+                        {tuition.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-500">
+                        {tuition.tutorName
+                          ? `Tutor: ${tuition.tutorName}`
+                          : "Tutor details available"}
+                      </p>
+                    </div>
+
+                    <div className="mt-5 flex-1 space-y-3 border-t border-slate-100 pt-5 text-sm text-slate-600">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-[#147D75]" />
+                        <span className="break-words">
+                          {tuition.classLevel}
+                        </span>
+                      </div>
+
+                      <div className="flex min-w-0 items-start gap-3">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#147D75]" />
+                        <span className="break-words">{tuition.location}</span>
+                      </div>
+
+                      <div className="flex min-w-0 items-start gap-3">
+                        <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-[#147D75]" />
+                        <span>{tuition.daysPerWeek} days per week</span>
+                      </div>
+
+                      <div className="flex min-w-0 items-start gap-3">
+                        <Wallet className="mt-0.5 h-4 w-4 shrink-0 text-[#147D75]" />
+                        <span>
+                          ৳
+                          {(tuition.salary ?? tuition.monthlyFee ?? 0).toLocaleString()}{" "}
+                          / month
+                        </span>
+                      </div>
+                    </div>
+
+                    <Link
+                      href={`/tuitions/${tuition.id}`}
+                      className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#147D75] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#10665F] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#147D75]"
+                    >
+                      View Details
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </article>
+                );
+              })}
             </div>
 
             {pagination && pagination.totalPages > 1 && (

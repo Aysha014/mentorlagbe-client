@@ -19,7 +19,8 @@ import {
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Applicant {
-  _id: string;
+    id: string;
+  _id?: string;
   studentName?: string;
   studentEmail: string;
   phone?: string;
@@ -102,7 +103,7 @@ export default function TutorApplicantsPage() {
 
     setError("");
     setSuccess("");
-    setActionId(applicant._id);
+    setActionId(applicant.id);
 
     try {
       const { data: tokenData, error: tokenError } = await token();
@@ -112,7 +113,7 @@ export default function TutorApplicantsPage() {
       }
 
       const response = await fetch(
-        `${API_URL}/tutor/applications/${applicant._id}/status`,
+        `${API_URL}/tutor/applications/${applicant.id}/status`,
         {
           method: "PATCH",
           headers: {
@@ -295,7 +296,7 @@ export default function TutorApplicantsPage() {
         <div className="grid gap-5 md:grid-cols-2">
           {filteredApplicants.map((applicant) => (
             <article
-              key={applicant._id}
+              key={applicant.id}
               className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
             >
               <div className="flex items-start justify-between gap-3">
@@ -384,7 +385,7 @@ export default function TutorApplicantsPage() {
                     disabled={!!actionId}
                     className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-3 py-3 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
                   >
-                    {actionId === applicant._id ? (
+                    {actionId === applicant.id ? (
                       <Loader2 size={16} className="animate-spin" />
                     ) : (
                       <CheckCircle size={16} />

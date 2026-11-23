@@ -15,6 +15,7 @@ import {
   X,
   GraduationCap,
   LogOut,
+  Bookmark,
   UserRound,
 } from "lucide-react";
 
@@ -22,6 +23,7 @@ const menus = {
   student: [
     { label: "Overview", href: "/dashboard/student", icon: LayoutDashboard },
     { label: "My Applications", href: "/dashboard/student/my-applications", icon: FileText },
+    { label: "Saved Tuitions", href: "/dashboard/student/bookmarks", icon: Bookmark },
     { label: "Browse Tuitions", href: "/tuitions", icon: BookOpen },
     { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
   ],
@@ -116,9 +118,8 @@ export default function DashboardSidebar() {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-200 lg:sticky lg:top-0 lg:z-20 lg:h-screen lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex h-20 items-center justify-between border-b border-gray-100 px-6">
           <Link
@@ -157,11 +158,10 @@ export default function DashboardSidebar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
-                    active
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${active
                       ? "bg-teal-50 text-teal-800"
                       : "text-gray-600 hover:bg-gray-50 hover:text-teal-800"
-                  }`}
+                    }`}
                 >
                   <Icon size={19} />
                   {item.label}
